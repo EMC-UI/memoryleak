@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class ProviderController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProviderController.class);
-
+	private static final Logger logger = LoggerFactory.getLogger(ProviderController.class);
+	
     @Autowired
     private RepositoryService repoSvc;
 
