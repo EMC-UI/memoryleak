@@ -18,94 +18,90 @@ import java.util.stream.Collectors;
 import static com.emc.memoryleaks.beans.Client.convert;
 import static com.emc.memoryleaks.beans.Provider.convert;
 
-
 @RestController
 @CrossOrigin(origins = "*")
 public class ProviderController {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProviderController.class);
-	
-    @Autowired
-    private RepositoryService repoSvc;
 
-    public ProviderController() {
-        logger.debug("Starting ProviderController");
-    }
+	@Autowired
+	private RepositoryService repoSvc;
 
-    @RequestMapping("/provider")
-    public List<Provider> getProviderList() throws EdpException {
-        logger.debug("get /providers");
-        return repoSvc.findAllSystems()
-                .stream()
-                .map(Provider::convert)
-                .collect(Collectors.toList());
-    }
+	public ProviderController() {
+		logger.debug("Starting ProviderController");
+	}
 
-    @PostMapping(value = "/provider")
-    public Provider createProvider(@RequestBody CreateSystemDetails createSystemDetails) throws EdpException {
-        logger.debug("post /provider ");
-        return convert(repoSvc.createSystem(createSystemDetails.getUsername(),
-                createSystemDetails.getHost(), createSystemDetails.getPassword()));
-    }
+	@RequestMapping("/provider")
+	public List<Provider> getProviderList() throws EdpException {
+		logger.debug("get /providers");
+		return repoSvc.findAllSystems().stream().map(Provider::convert).collect(Collectors.toList());
+	}
 
-    @RequestMapping("/provider/{id}")
-    public Provider getProviderById(@PathVariable("id") final String id) {
-        logger.debug("get providers by Id");
-        return convert(repoSvc.findSystemById(id));
-    }
+	@PostMapping(value = "/provider")
+	public Provider createProvider(@RequestBody CreateSystemDetails createSystemDetails) throws EdpException {
+		logger.debug("post /provider ");
+		return convert(repoSvc.createSystem(createSystemDetails.getUsername(), createSystemDetails.getHost(),
+				createSystemDetails.getPassword()));
+	}
 
-    @RequestMapping("/provider/{id}/client")
-    public List<Client> getClientList(@PathVariable("id") final String id) {
-        return repoSvc.findSystemById(id).findAllClients()
-                .stream()
-                .map(Client::convert)
-                .collect(Collectors.toList());
-    }
+	@RequestMapping("/provider/{id}")
+	public Provider getProviderById(@PathVariable("id") final String id) {
+		logger.debug("get providers by Id");
+		return convert(repoSvc.findSystemById(id));
+	}
 
-    @RequestMapping("provider/{providerId}/client/{clientId}")
-    public Client getClientById(@PathVariable("providerId") final String providerId,
-                                @PathVariable("clientId") final String clientId) {
-        logger.debug("getClientById({}, {})", providerId, clientId);
-        return convert(repoSvc.findSystemById(providerId).findClientById(clientId));
-    }
+	@RequestMapping("/provider/{id}/client")
+	public List<Client> getClientList(@PathVariable("id") final String id) {
+		return repoSvc.findSystemById(id).findAllClients().stream().map(Client::convert).collect(Collectors.toList());
+	}
 
-    @RequestMapping("provider/{providerId}/client/{clientId}/backup")
-    public List<Backup> getBackupList(@PathVariable("providerId") final String providerId,
-                                      @PathVariable("clientId") final String clientId,
-                                      @RequestParam(value = "count", defaultValue = "10") String count) {
-        int countInt = 10;
-        try {
-            countInt = Integer.parseInt(count);
-        } catch (final NumberFormatException e) {
-            logger.warn("Invalid backup count given, {}, defaulting to 10", count);
-        }
-        return repoSvc.findSystemById(providerId).findClientById(clientId).getBackups(countInt)
-                .stream()
-                .map(Backup::convert)
-                .collect(Collectors.toList());
-    }
+	@RequestMapping("provider/{providerId}/client/{clientId}")
+	public Client getClientById(@PathVariable("providerId") final String providerId,
+			@PathVariable("clientId") final String clientId) {
+		logger.debug("getClientById({}, {})", providerId, clientId);
+		if (clientId.contains("-")) {
+			int lastIndex = clientId.lastIndexOf("-");
+			return convert(repoSvc.findSystemById(providerId).findClientById(clientId.substring(lastIndex + 1)));
+		}
 
-    private static Provider mapEdpSystem(final EdpSystem edpSystem) {
-        if (edpSystem != null) {
-            return new Provider(edpSystem.getId(), edpSystem.getDisplayName(), edpSystem.getDescription(), "");
-        } else {
-            return null;
-        }
-    }
+		return convert(repoSvc.findSystemById(providerId).findClientById(clientId));
+	}
 
-    private static Client mapEdpClient(final EdpClient c) {
-        if (c != null) {
-            return new Client(c.getId(), c.getDisplayName(), c.getDescription(), "");
-        } else {
-            return null;
-        }
-    }
+	@RequestMapping("provider/{providerId}/client/{clientId}/backup")
+	public List<Backup> getBackupList(@PathVariable("providerId") final String providerId,
+			@PathVariable("clientId") final String clientId,
+			@RequestParam(value = "count", defaultValue = "10") String count) {
+		int countInt = 10;
+		try {
+			countInt = Integer.parseInt(count);
+		} catch (final NumberFormatException e) {
+			logger.warn("Invalid backup count given, {}, defaulting to 10", count);
+		}
+		return repoSvc.findSystemById(providerId).findClientById(clientId).getBackups(countInt).stream()
+				.map(Backup::convert).collect(Collectors.toList());
+	}
 
-    private static Backup mapEdpBackup(final EdpBackup b) {
-        if (b != null) {
-            return new Backup(b.getId(), b.getDisplayName(), b.getDescription(), "");
-        } else {
-            return null;
-        }
-    }
+	private static Provider mapEdpSystem(final EdpSystem edpSystem) {
+		if (edpSystem != null) {
+			return new Provider(edpSystem.getId(), edpSystem.getDisplayName(), edpSystem.getDescription(), "");
+		} else {
+			return null;
+		}
+	}
+
+	private static Client mapEdpClient(final EdpClient c) {
+		if (c != null) {
+			return new Client(c.getId(), c.getDisplayName(), c.getDescription(), "");
+		} else {
+			return null;
+		}
+	}
+
+	private static Backup mapEdpBackup(final EdpBackup b) {
+		if (b != null) {
+			return new Backup(b.getId(), b.getDisplayName(), b.getDescription(), "");
+		} else {
+			return null;
+		}
+	}
 }
