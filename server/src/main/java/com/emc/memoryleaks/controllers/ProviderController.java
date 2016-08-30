@@ -1,8 +1,12 @@
 package com.emc.memoryleaks.controllers;
 
+import com.emc.edp4vcac.domain.EdpBackup;
+import com.emc.edp4vcac.domain.EdpClient;
+import com.emc.edp4vcac.domain.EdpSystem;
 import com.emc.edp4vcac.domain.model.EdpException;
 import com.emc.memoryleaks.beans.*;
 import com.emc.memoryleaks.service.RepositoryService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,11 +85,27 @@ public class ProviderController {
                 .collect(Collectors.toList());
     }
 
-    @RequestMapping("provider/{providerId}/policy")
-    public List<Policy> getPolicyList(@PathVariable("providerId") final String providerId) {
-        return repoSvc.findSystemById(providerId).findAllPolicies()
-                .stream()
-                .map(Policy::convert)
-                .collect(Collectors.toList());
+    private static Provider mapEdpSystem(final EdpSystem edpSystem) {
+        if (edpSystem != null) {
+            return new Provider(edpSystem.getId(), edpSystem.getDisplayName(), edpSystem.getDescription(), "");
+        } else {
+            return null;
+        }
+    }
+
+    private static Client mapEdpClient(final EdpClient c) {
+        if (c != null) {
+            return new Client(c.getId(), c.getDisplayName(), c.getDescription(), "");
+        } else {
+            return null;
+        }
+    }
+
+    private static Backup mapEdpBackup(final EdpBackup b) {
+        if (b != null) {
+            return new Backup(b.getId(), b.getDisplayName(), b.getDescription(), "");
+        } else {
+            return null;
+        }
     }
 }
